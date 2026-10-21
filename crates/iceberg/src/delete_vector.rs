@@ -149,7 +149,7 @@ impl DeleteVector {
     /// directory of 32-bit key / 32-bit roaring bitmap pairs ordered by unsigned comparison of the
     /// keys, one bitmap per key. `roaring`'s `RoaringTreemap::serialize_into` emits exactly that
     /// directory (a `u64` little-endian count followed by ascending `u32`-keyed bitmaps), which the
-    /// round-trip tests verify against [`decode_roaring_directory`].
+    /// round-trip tests verify against `decode_roaring_directory`.
     ///
     /// The roaring vector is written as-is, not run-length-encoded, using sparse-key encoding: only
     /// the non-empty 32-bit containers are emitted. For the same logical set of positions these
