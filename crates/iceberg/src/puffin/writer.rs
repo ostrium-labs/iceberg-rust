@@ -117,6 +117,11 @@ impl PuffinWriter {
         Ok(())
     }
 
+    /// The metadata of the blobs added so far, in the order they were added.
+    pub(crate) fn written_blobs_metadata(&self) -> &[BlobMetadata] {
+        &self.written_blobs_metadata
+    }
+
     /// Finalizes the Puffin file and returns its stored size.
     pub async fn close(mut self) -> Result<IoFileMetadata> {
         self.write_header_once().await?;
