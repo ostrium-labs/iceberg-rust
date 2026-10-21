@@ -240,6 +240,7 @@ pub fn iceberg::delete_vector::DeleteVector::is_empty(&self) -> bool
 pub fn iceberg::delete_vector::DeleteVector::iter(&self) -> iceberg::delete_vector::DeleteVectorIterator<'_>
 pub fn iceberg::delete_vector::DeleteVector::len(&self) -> u64
 pub fn iceberg::delete_vector::DeleteVector::new(roaring_treemap: roaring::treemap::RoaringTreemap) -> iceberg::delete_vector::DeleteVector
+pub fn iceberg::delete_vector::DeleteVector::serialize(&self) -> iceberg::Result<alloc::vec::Vec<u8>>
 impl core::default::Default for iceberg::delete_vector::DeleteVector
 pub fn iceberg::delete_vector::DeleteVector::default() -> iceberg::delete_vector::DeleteVector
 impl core::fmt::Debug for iceberg::delete_vector::DeleteVector
