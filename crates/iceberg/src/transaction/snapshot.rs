@@ -92,6 +92,16 @@ pub(crate) trait SnapshotProduceOperation: Send + Sync {
     fn truncate_full_table(&self) -> bool {
         self.operation() == Operation::Overwrite
     }
+
+    /// Delete files this operation adds, counted in the snapshot summary.
+    fn added_delete_files(&self) -> &[DataFile] {
+        &[]
+    }
+
+    /// Delete files this operation removes, counted in the snapshot summary.
+    fn removed_delete_files(&self) -> &[DataFile] {
+        &[]
+    }
 }
 
 pub(crate) struct DefaultManifestProcess;
@@ -358,6 +368,8 @@ impl<'a> SnapshotProducer<'a> {
         // For details, please refer to https://github.com/apache/iceberg-rust/issues/1548
         if self.added_data_files.is_empty()
             && self.deleted_data_files.is_empty()
+            && snapshot_produce_operation.added_delete_files().is_empty()
+            && snapshot_produce_operation.removed_delete_files().is_empty()
             && self.snapshot_properties.is_empty()
         {
             return Err(Error::new(
@@ -423,6 +435,31 @@ impl<'a> SnapshotProducer<'a> {
                 table_metadata.current_schema().clone(),
                 table_metadata.default_partition_spec().clone(),
             );
+        }
+
+        for (file, added) in snapshot_produce_operation
+            .added_delete_files()
+            .iter()
+            .map(|f| (f, true))
+            .chain(
+                snapshot_produce_operation
+                    .removed_delete_files()
+                    .iter()
+                    .map(|f| (f, false)),
+            )
+        {
+            let partition_spec = table_metadata
+                .partition_spec_by_id(file.partition_spec_id)
+                .ok_or_else(|| {
+                    invalid_data!("Unknown partition spec id {}", file.partition_spec_id)
+                })?
+                .clone();
+            let schema = table_metadata.current_schema().clone();
+            if added {
+                summary_collector.add_file(file, schema, partition_spec);
+            } else {
+                summary_collector.remove_file(file, schema, partition_spec);
+            }
         }
 
         for data_file in &self.deleted_data_files {
