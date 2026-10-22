@@ -165,3 +165,18 @@ TBLPROPERTIES (
 spark.sql("INSERT INTO rest.default.test_deletion_vectors SELECT id, CAST(id AS STRING) FROM range(0, 1000, 1, 4)")
 spark.sql("DELETE FROM rest.default.test_deletion_vectors WHERE id % 10 = 0")
 spark.sql("DELETE FROM rest.default.test_deletion_vectors WHERE id % 10 = 1")
+
+#  Tables that the RowDelta integration tests commit delete files to: a v3 table whose data
+#  files carry Spark-written deletion vectors, and a v2 table without deletes.
+for version, name in (("3", "test_row_delta_v3"), ("2", "test_row_delta_v2")):
+    spark.sql(f"""
+CREATE OR REPLACE TABLE rest.default.{name} (id bigint, v string)
+USING iceberg
+TBLPROPERTIES (
+    'format-version'='{version}',
+    'write.delete.mode'='merge-on-read',
+    'write.update.mode'='merge-on-read'
+);
+""")
+    spark.sql(f"INSERT INTO rest.default.{name} SELECT id, CAST(id AS STRING) FROM range(0, 1000, 1, 4)")
+spark.sql("DELETE FROM rest.default.test_row_delta_v3 WHERE id % 10 = 0")
