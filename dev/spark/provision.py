@@ -150,3 +150,18 @@ FROM (
     SELECT EXPLODE(SEQUENCE(0, 1000)) AS s
 );
 """)
+
+#  Create a v3 table with deletion vectors: one insert writes four data files, then two
+#  merge-on-read deletes leave one deletion vector per data file.
+spark.sql("""
+CREATE OR REPLACE TABLE rest.default.test_deletion_vectors (id bigint, v string)
+USING iceberg
+TBLPROPERTIES (
+    'format-version'='3',
+    'write.delete.mode'='merge-on-read',
+    'write.update.mode'='merge-on-read'
+);
+""")
+spark.sql("INSERT INTO rest.default.test_deletion_vectors SELECT id, CAST(id AS STRING) FROM range(0, 1000, 1, 4)")
+spark.sql("DELETE FROM rest.default.test_deletion_vectors WHERE id % 10 = 0")
+spark.sql("DELETE FROM rest.default.test_deletion_vectors WHERE id % 10 = 1")
