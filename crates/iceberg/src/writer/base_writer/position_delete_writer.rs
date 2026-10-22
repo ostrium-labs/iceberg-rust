@@ -115,7 +115,7 @@ fn field_id(field: &Field) -> Result<i32> {
 /// Validates that a batch is a position delete file: the `file_path` (`Utf8`) and
 /// `pos` (`Int64`) columns, in order, with the two reserved field ids. Checking it
 /// here gives a clear error before the batch reaches the Parquet writer.
-fn validate_position_delete_batch(batch: &RecordBatch) -> Result<()> {
+pub(crate) fn validate_position_delete_batch(batch: &RecordBatch) -> Result<()> {
     let fields = batch.schema_ref().fields();
     if fields.len() != 2 {
         return Err(invalid_data!(
